@@ -10,7 +10,7 @@ import {
   FloorMaterialType,
   WallMaterialType,
 } from './types';
-import { INITIAL_EXHIBITS, DEFAULT_LIGHTING, DEFAULT_MATERIALS, DEFAULT_OPTIMIZER, arrangeExhibitsInFloorGrid, generate30SampleExhibits } from './data/exhibits';
+import { INITIAL_EXHIBITS, DEFAULT_LIGHTING, DEFAULT_MATERIALS, DEFAULT_OPTIMIZER, arrangeExhibitsInFloorGrid } from './data/exhibits';
 import { StudioCanvas } from './components/StudioCanvas';
 import { LightingControlPanel } from './components/LightingControlPanel';
 import { MaterialControlPanel } from './components/MaterialControlPanel';
@@ -19,7 +19,7 @@ import { ModelInspectorPanel } from './components/ModelInspectorPanel';
 import { CustomModelModal } from './components/CustomModelModal';
 import { CatalogueOverlay } from './components/CatalogueOverlay';
 import { toggleStudioAmbiance } from './utils/audioAmbiance';
-import { Sun, Palette, Box, Cpu, Volume2, VolumeX, Upload, RefreshCw, SlidersHorizontal, Layers, Building2, Eye, Grid, ArrowLeft, X, Lock } from 'lucide-react';
+import { Sun, Palette, Cpu, Volume2, VolumeX, Upload, RefreshCw, SlidersHorizontal, X, Lock } from 'lucide-react';
 
 export default function App() {
   // Main Exhibition State
@@ -32,7 +32,7 @@ export default function App() {
   const [optimizerSettings, setOptimizerSettings] = useState<ModelOptimizerSettings>(DEFAULT_OPTIMIZER);
 
   // Inspector & Camera state
-  const [cameraPreset, setCameraPreset] = useState<CameraPreset>('full_room');
+  const [cameraPreset, setCameraPreset] = useState<CameraPreset>('hero');
   const [turntable, setTurntable] = useState<boolean>(true);
   const [turntableSpeed, setTurntableSpeed] = useState<number>(1.0);
   const [highlightPart, setHighlightPart] = useState<string | null>(null);
@@ -110,34 +110,18 @@ export default function App() {
     }
   };
 
-  // Global Keyboard Listener: Press ESC or 'x'/'X' to exit model lock-in mode back to Full Room View
+  // Global Keyboard Listener: Press ESC or 'x'/'X' to reset camera to hero view
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing inside an input field or textarea
       const targetTag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (targetTag === 'input' || targetTag === 'textarea') return;
-
       if (e.key === 'Escape' || e.key === 'x' || e.key === 'X') {
-        setCameraPreset('full_room');
+        setCameraPreset('hero');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  // Arrange all current models into an even spatial floor grid across the gallery space
-  const handleArrangeFloorGrid = () => {
-    const updated = arrangeExhibitsInFloorGrid(exhibits);
-    setExhibits(updated);
-  };
-
-  // Generate and sample 30 3D models placed evenly throughout the room space
-  const handleLoad30Models = () => {
-    const sample30 = generate30SampleExhibits();
-    setExhibits(sample30);
-    setCurrentExhibit(sample30[0]);
-    setCameraPreset('full_room');
-  };
 
   // Handle GLB File Upload Pipeline with automatic spatial grid placement
   const handleUploadGlbFile = (file: File) => {
@@ -224,50 +208,21 @@ export default function App() {
         onCycleLightingMood={handleCycleLightingMood}
       />
 
-      {/* TOP CENTER FLOATING MODE BANNER & CAMERA FOCUS LOCK CONTROLS */}
+      {/* TOP CENTER FLOATING MODEL LOCK-IN BANNER */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center space-x-2 bg-stone-900/95 border border-stone-700/80 px-4 py-2 rounded-full shadow-2xl backdrop-blur-md pointer-events-auto transition-all">
-        {cameraPreset !== 'full_room' ? (
-          <>
-            <Lock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span className="text-xs font-mono text-stone-200">
-              Model Lock-In: <strong className="text-amber-300 font-medium">{currentExhibit.title}</strong>
-            </span>
-            <button
-              onClick={() => setCameraPreset('full_room')}
-              className="ml-2 px-3 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-stone-950 border border-amber-500/50 text-[11px] font-mono font-medium transition-all flex items-center space-x-1.5 shadow-md"
-              title="Release model lock-in and return to full room view (ESC or X)"
-            >
-              <X className="w-3.5 h-3.5" />
-              <span>Exit Lock-In (X)</span>
-              <kbd className="text-[9px] bg-stone-800 px-1 rounded text-stone-300 border border-stone-700 ml-0.5">ESC</kbd>
-            </button>
-          </>
-        ) : (
-          <>
-            <Building2 className="w-3.5 h-3.5 text-stone-400" />
-            <span className="text-xs font-mono text-stone-300">
-              Full Room Gallery Mode ({exhibits.length} Models)
-            </span>
-            {exhibits.length < 10 && (
-              <button
-                onClick={handleLoad30Models}
-                className="ml-2 px-2.5 py-1 rounded-full bg-stone-800 hover:bg-amber-500/20 text-stone-300 hover:text-amber-300 border border-stone-700 text-[11px] font-mono transition-all flex items-center space-x-1"
-                title="Populate room with 30 sample 3D models spaced evenly"
-              >
-                <Grid className="w-3 h-3 text-amber-400" />
-                <span>Sample 30 Models</span>
-              </button>
-            )}
-            <button
-              onClick={handleArrangeFloorGrid}
-              className="px-2.5 py-1 rounded-full bg-stone-800 hover:bg-amber-500/20 text-stone-300 hover:text-amber-300 border border-stone-700 text-[11px] font-mono transition-all flex items-center space-x-1"
-              title="Re-arrange all models evenly across the floor space grid"
-            >
-              <RefreshCw className="w-3 h-3 text-stone-400" />
-              <span>Auto-Grid</span>
-            </button>
-          </>
-        )}
+        <Lock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+        <span className="text-xs font-mono text-stone-200">
+          <strong className="text-amber-300 font-medium">{currentExhibit.title}</strong>
+        </span>
+        <button
+          onClick={() => setCameraPreset('hero')}
+          className="ml-2 px-3 py-1 rounded-full bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-stone-950 border border-amber-500/50 text-[11px] font-mono font-medium transition-all flex items-center space-x-1.5 shadow-md"
+          title="Reset camera to hero view (ESC)"
+        >
+          <X className="w-3.5 h-3.5" />
+          <span>Reset View</span>
+          <kbd className="text-[9px] bg-stone-800 px-1 rounded text-stone-300 border border-stone-700 ml-0.5">ESC</kbd>
+        </button>
       </div>
 
       {/* MINIMALIST TRANSPARENT FLOATING ICON TOOLBAR (TOP RIGHT) - ZERO TEXT DEFAULT */}

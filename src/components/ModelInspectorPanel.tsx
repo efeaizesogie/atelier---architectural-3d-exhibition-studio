@@ -104,7 +104,6 @@ export const ModelInspectorPanel: React.FC<ModelInspectorPanelProps> = ({
             { id: 'macro', name: 'Macro Detail', desc: 'Face / texture close-up' },
             { id: 'low_angle', name: 'Low Angle', desc: 'Dramatic monument perspective' },
             { id: 'plan', name: 'Top Plan', desc: 'Architectural layout' },
-            { id: 'full_room', name: 'Full Gallery', desc: 'Wide spatial context' },
           ].map((preset) => (
             <button
               key={preset.id}

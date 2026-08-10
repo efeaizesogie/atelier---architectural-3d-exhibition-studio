@@ -286,7 +286,7 @@ export const StudioCanvas: React.FC<StudioCanvasProps> = ({
   onCycleLightingMood,
 }) => {
   const [floorTarget, setFloorTarget] = useState<THREE.Vector3 | null>(null);
-  const isFocusedMode = cameraPreset !== 'full_room';
+  const isFocusedMode = true;
 
   return (
     <div className="w-full h-full relative select-none bg-[#171614] overflow-hidden">
