@@ -1,0 +1,6 @@
+{
+  "name": "Atelier - Architectural 3D Exhibition Studio",
+  "description": "Hyper-realistic virtual 3D gallery and studio for character models with physics-based lighting and architectural materials.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
