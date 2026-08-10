@@ -70,7 +70,12 @@ export function arrangeExhibitsInFloorGrid(exhibitsList: CharacterExhibit[]): Ch
 // Scan public/models directory and auto-generate exhibits from all .glb files
 // Add new .glb files to public/models/ and they will appear automatically
 const MODEL_FILES = [
-  'character.glb',
+  'Bat rebel.glb',
+  'Deadpool.glb',
+  'GLados.glb',
+  'Slygrin.glb',
+  'New robo model.glb'
+
   // Add more filenames here as you drop them into public/models/
 ];
 
