@@ -1,8 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useFrame, ThreeEvent } from '@react-three/fiber';
-import * as THREE from 'three';
-import { useGLTF, Detailed } from '@react-three/drei';
-import { CharacterExhibit, DisplayMode, ModelOptimizerSettings, LightingConfig } from '../types';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useFrame, ThreeEvent } from "@react-three/fiber";
+import * as THREE from "three";
+import { useGLTF, Detailed } from "@react-three/drei";
+import {
+  CharacterExhibit,
+  DisplayMode,
+  ModelOptimizerSettings,
+  LightingConfig,
+} from "../types";
 
 interface CharacterModelsProps {
   exhibits: CharacterExhibit[];
@@ -19,12 +24,21 @@ interface CharacterModelsProps {
 }
 
 // Preload all known model URLs so they're cached before render
-const PRELOAD_URLS = ['/models/character.glb'];
+const PRELOAD_URLS = [
+  "/models/Bat rebel.glb",
+  "/models/Deadpool.glb",
+  "/models/GLados.glb",
+  "/models/Slygrin.glb",
+  "/models/New robo model.glb",
+];
 PRELOAD_URLS.forEach((url) => useGLTF.preload(url));
 
 // Shared low-poly proxy geometry for distant LOD level
 const proxyGeo = new THREE.BoxGeometry(0.5, 1.4, 0.5);
-const proxyMat = new THREE.MeshStandardMaterial({ color: '#6b6560', roughness: 0.8 });
+const proxyMat = new THREE.MeshStandardMaterial({
+  color: "#6b6560",
+  roughness: 0.8,
+});
 
 function buildScene(source: THREE.Group, wireframe: boolean): THREE.Group {
   const clone = source.clone(true);
@@ -36,8 +50,14 @@ function buildScene(source: THREE.Group, wireframe: boolean): THREE.Group {
     mesh.frustumCulled = true;
     if (mesh.geometry) mesh.geometry.computeBoundingSphere();
     if (wireframe) {
-      const applyWF = (m: THREE.Material) => { const c = m.clone() as THREE.MeshStandardMaterial; c.wireframe = true; return c; };
-      mesh.material = Array.isArray(mesh.material) ? mesh.material.map(applyWF) : applyWF(mesh.material as THREE.Material);
+      const applyWF = (m: THREE.Material) => {
+        const c = m.clone() as THREE.MeshStandardMaterial;
+        c.wireframe = true;
+        return c;
+      };
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map(applyWF)
+        : applyWF(mesh.material as THREE.Material);
     }
   });
   const box = new THREE.Box3().setFromObject(clone);
@@ -50,9 +70,18 @@ function buildScene(source: THREE.Group, wireframe: boolean): THREE.Group {
 }
 
 // Optimized GLB loader with correct LOD: full model up close, proxy box at distance
-function OptimizedGLTFModel({ url, wireframe }: { url: string; wireframe: boolean }) {
+function OptimizedGLTFModel({
+  url,
+  wireframe,
+}: {
+  url: string;
+  wireframe: boolean;
+}) {
   const { scene } = useGLTF(url);
-  const fullScene = useMemo(() => buildScene(scene, wireframe), [scene, wireframe]);
+  const fullScene = useMemo(
+    () => buildScene(scene, wireframe),
+    [scene, wireframe]
+  );
 
   return (
     <Detailed distances={[0, 14]}>
@@ -89,10 +118,10 @@ function ExhibitNode({
   const isDragging = useRef(false);
   const previousMouseX = useRef(0);
 
-  const isWireframe = displayMode === 'wireframe';
+  const isWireframe = displayMode === "wireframe";
   const glowHex = isSelected
-    ? lightingConfig.accentColor || '#e2ba7e'
-    : lightingConfig.pedestalGlowColor || '#a88d58';
+    ? lightingConfig.accentColor || "#e2ba7e"
+    : lightingConfig.pedestalGlowColor || "#a88d58";
 
   useFrame((_, delta) => {
     if (turntable && modelGroupRef.current && !isDragging.current) {
@@ -108,12 +137,12 @@ function ExhibitNode({
         modelGroupRef.current.rotation.y += ev.detail.deltaX * 0.012;
       }
     };
-    window.addEventListener('rotate-focused-model', handleRotateEvent);
-    return () => window.removeEventListener('rotate-focused-model', handleRotateEvent);
+    window.addEventListener("rotate-focused-model", handleRotateEvent);
+    return () =>
+      window.removeEventListener("rotate-focused-model", handleRotateEvent);
   }, [isFocusedMode, isSelected]);
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-    if (isFocusedMode && !isSelected) return;
     e.stopPropagation();
     onSelect();
     isDragging.current = true;
@@ -123,7 +152,8 @@ function ExhibitNode({
 
   const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
     if (isDragging.current && modelGroupRef.current) {
-      modelGroupRef.current.rotation.y += (e.clientX - previousMouseX.current) * 0.012;
+      modelGroupRef.current.rotation.y +=
+        (e.clientX - previousMouseX.current) * 0.012;
       previousMouseX.current = e.clientX;
     }
   };
@@ -136,7 +166,7 @@ function ExhibitNode({
   const marbleMat = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: hovered ? '#ffffff' : '#f5f3ee',
+        color: hovered ? "#ffffff" : "#f5f3ee",
         roughness: 0.35,
         metalness: 0.05,
         wireframe: isWireframe,
@@ -145,36 +175,66 @@ function ExhibitNode({
   );
 
   const pos = exhibit.position || [0, 0, 0];
-  const disableNonSelectedEvents = isFocusedMode && !isSelected;
+  // In focused mode, still allow clicking other models to switch the lock.
+  // Only disable hover effects on non-selected models.
+  const disableNonSelectedHover = isFocusedMode && !isSelected;
 
   return (
     <group position={pos}>
       {/* Pedestal */}
       <group
-        onClick={(e) => { if (disableNonSelectedEvents) return; e.stopPropagation(); onSelect(); }}
-        onDoubleClick={(e) => { if (disableNonSelectedEvents) return; e.stopPropagation(); onDoubleClick?.(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect();
+        }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onDoubleClick?.();
+        }}
       >
         <mesh position={[0, 0.06, 0]} castShadow receiveShadow>
           <boxGeometry args={[1.4, 0.12, 1.4]} />
-          <meshStandardMaterial color={isSelected ? '#3a342b' : '#28241e'} roughness={0.3} metalness={0.7} />
+          <meshStandardMaterial
+            color={isSelected ? "#3a342b" : "#28241e"}
+            roughness={0.3}
+            metalness={0.7}
+          />
         </mesh>
         <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
           <boxGeometry args={[1.05, 0.78, 1.05]} />
-          <meshStandardMaterial color={isSelected ? '#2e2922' : '#201d18'} roughness={0.4} metalness={0.5} />
+          <meshStandardMaterial
+            color={isSelected ? "#2e2922" : "#201d18"}
+            roughness={0.4}
+            metalness={0.5}
+          />
         </mesh>
 
         {/* Accent halo ring */}
         <mesh position={[0, 0.865, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.52, 0.62, 32]} />
-          <meshBasicMaterial color={glowHex} transparent opacity={isSelected ? 0.95 : hovered ? 0.6 : 0.25} side={THREE.DoubleSide} />
+          <meshBasicMaterial
+            color={glowHex}
+            transparent
+            opacity={isSelected ? 0.95 : hovered ? 0.6 : 0.25}
+            side={THREE.DoubleSide}
+          />
         </mesh>
 
-        <pointLight position={[0, 0.9, 0]} color={glowHex} intensity={isSelected ? 1.8 : 0.4} distance={2.5} />
+        <pointLight
+          position={[0, 0.9, 0]}
+          color={glowHex}
+          intensity={isSelected ? 1.8 : 0.4}
+          distance={2.5}
+        />
 
         {/* Brass plaque */}
         <mesh position={[0, 0.48, 0.54]} castShadow receiveShadow>
           <boxGeometry args={[0.38, 0.1, 0.012]} />
-          <meshStandardMaterial color={glowHex} roughness={0.2} metalness={0.9} />
+          <meshStandardMaterial
+            color={glowHex}
+            roughness={0.2}
+            metalness={0.9}
+          />
         </mesh>
       </group>
 
@@ -185,9 +245,21 @@ function ExhibitNode({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onDoubleClick={(e) => { if (disableNonSelectedEvents) return; e.stopPropagation(); onDoubleClick?.(); }}
-        onPointerOver={(e) => { if (disableNonSelectedEvents) return; e.stopPropagation(); setHovered(true); document.body.style.cursor = 'grab'; }}
-        onPointerOut={() => { if (disableNonSelectedEvents) return; setHovered(false); document.body.style.cursor = 'auto'; }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onDoubleClick?.();
+        }}
+        onPointerOver={(e) => {
+          if (disableNonSelectedHover) return;
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = "grab";
+        }}
+        onPointerOut={() => {
+          if (disableNonSelectedHover) return;
+          setHovered(false);
+          document.body.style.cursor = "auto";
+        }}
       >
         {exhibit.customGlbUrl ? (
           <React.Suspense
@@ -198,11 +270,19 @@ function ExhibitNode({
               </mesh>
             }
           >
-            <OptimizedGLTFModel url={exhibit.customGlbUrl} wireframe={isWireframe} />
+            <OptimizedGLTFModel
+              url={exhibit.customGlbUrl}
+              wireframe={isWireframe}
+            />
           </React.Suspense>
         ) : (
           // Fallback placeholder for exhibits without a GLB URL
-          <mesh position={[0, 0.7, 0]} castShadow receiveShadow material={marbleMat}>
+          <mesh
+            position={[0, 0.7, 0]}
+            castShadow
+            receiveShadow
+            material={marbleMat}
+          >
             <boxGeometry args={[0.8, 1.4, 0.8]} />
           </mesh>
         )}
